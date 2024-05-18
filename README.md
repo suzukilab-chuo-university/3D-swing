@@ -33,8 +33,8 @@
 ## フォルダ構造
 
 ```.
-├── example: READMEに使用する画像
 ├── docs:    deployするWebサイトのデータ
+├── example: READMEに使用する画像
 ├── project: Webサイトを作成するUnityのプロジェクト
 ├── .gitignore
 └── README.md
