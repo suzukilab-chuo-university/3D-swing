@@ -16,7 +16,7 @@
 
 ### 出力される3Dモデルの例
 
-![出力される3Dモデルの例](https://suzukilab-chuo-university.github.io/3D-swing/example/output.gif)
+![動作の例](https://raw.githubusercontent.com/suzukilab-chuo-university/3D-swing/main/example/output.gif)
 
 ## 使用方法
 
