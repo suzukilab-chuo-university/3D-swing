@@ -6,7 +6,6 @@ public class swingManager : MonoBehaviour
     private float beforeTime;
     private bool flagSin;
     private bool flagRotate;
-    private float size;
 
     public static float angleValue = 20f;
     public static float speedValue = 0.2f;  // 周期
@@ -17,7 +16,6 @@ public class swingManager : MonoBehaviour
         beforeTime = Time.time;
         flagSin = true;
         flagRotate = true;
-        size = 1.0f;
     }
 
     void Update()
