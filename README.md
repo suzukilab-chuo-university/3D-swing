@@ -20,8 +20,8 @@
 
 ## 使用方法
 
-- Select Texture を押し, RGB画像を入力
-- Select Depth を押し, 深度画像を入力
+- Upload Texture を押し, RGB画像を入力
+- Upload Depth を押し, 深度画像を入力
 - Generate を押し, 中央に3Dモデルが表示されることを確認
 - Depthで奥行の拡大率を, Angleでスイングの角度, Speedでスイングの速度をそれぞれ変更できる
 
