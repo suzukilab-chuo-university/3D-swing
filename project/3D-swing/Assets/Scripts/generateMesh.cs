@@ -2,63 +2,25 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(MeshFilter)), RequireComponent(typeof(MeshRenderer))]
-public class generateMesh : MonoBehaviour
+public class GenerateMesh : MonoBehaviour
 {
     private MeshFilter meshFilter;
     private Renderer meshRenderer;
-    private float meshSize = 6f;
-    private float beforeDepthValue = 0.75f;
+    private float meshSize = 8f;
     private bool flag;
-
-    public static float depthValue = 0.75f;
-    public static Texture textureTexture;
-    public static Texture depthTexture;
+    private float depthValue = 0.75f;
 
     void Start()
     {
         meshFilter = GetComponent<MeshFilter>();
         meshRenderer = GetComponent<Renderer>();
 
-        beforeDepthValue = depthValue + 0.4f;
-        flag = false;
-    }
-
-    void Update()
-    {
-        if (beforeDepthValue != depthValue && flag)
-        {
-            beforeDepthValue = depthValue;
-            UpdateMesh();
-        }
-    }
-
-
-    public void UpdateMesh()
-    {
         flag = true;
+    }
 
-        //画像が選択されていなければエラーダイアログを出す
-        if (textureTexture == null)
-        {
-            errorManager.errorReason = "Select image.";
-            errorManager.errorFlag = true;
-            return;
-        }
-        else if (depthTexture == null)
-        {
-            errorManager.errorReason = "Select image.";
-            errorManager.errorFlag = true;
-            return;
-        }
 
-        // Textureを読み込み
-        Texture2D textureTexture2D = ToTexture2D(textureTexture);
-        Sprite textureSprite = Sprite.Create(textureTexture2D, new Rect(0, 0, textureTexture2D.width, textureTexture2D.height), Vector2.zero);
-
-        // Depthを読み込み
-        Texture2D depthTexture2D = ToTexture2D(depthTexture);
-        Sprite depthSprite = Sprite.Create(depthTexture2D, new Rect(0, 0, depthTexture2D.width, depthTexture2D.height), Vector2.zero);
-
+    public void UpdateMesh(Sprite textureSprite)
+    {
         // メッシュを生成
         Mesh mesh = new Mesh();
         mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
@@ -74,28 +36,30 @@ public class generateMesh : MonoBehaviour
         if (ws < hs)
         {
             transform.localScale = new Vector3(ws, ws, 1f);
-            transform.position = new Vector3(0, -meshSize / 2 * h / w, 0);
+            transform.localPosition = new Vector3(0, -meshSize / 2 * h / w, 0);
         }
         // 縦長の画像の場合 メッシュの縦のサイズを6fにする
         else
         {
             transform.localScale = new Vector3(hs, hs, 1f);
-            transform.position = new Vector3(0, -meshSize / 2, 0);
+            transform.localPosition = new Vector3(0, -meshSize / 2, 0);
         }
 
         // 頂点リストを生成
         List<Vector3> vertices = new List<Vector3>();
-        List<Color> colors = new List<Color>();
-
+        
         // 深度情報を取得
-        Color[] depths = depthSprite.texture.GetPixels(0, 0, w, h);
+        Color[] depths = textureSprite.texture.GetPixels(0, 0, w, h);
 
         for (int j = 0; j < h; j++)
         {
             for (int i = 0; i < w; i++)
             {
-                vertices.Add(new Vector3((float)(i - w / 2), (float)j, -depths[i + j * w].grayscale / depthValue));
-                colors.Add(Color.red);
+                if (i == 10)
+                {
+                    Debug.Log(depths[i + j * w].grayscale);
+                }
+                vertices.Add(new Vector3((float)(i - w / 2), (float)j, depths[i + j * w].grayscale / depthValue));
             }
         }
 
@@ -137,24 +101,19 @@ public class generateMesh : MonoBehaviour
         // メッシュに画像を設定
         meshRenderer.material.SetTexture("_MainTex", textureSprite.texture);
         meshRenderer.material.shader = Shader.Find("Unlit/mesh");
-        //meshRenderer.material.shader = Shader.Find("Sprites/Default");
-        //mesh.SetColors(colors);
+
+        SwingManager.beforeTime = Time.time;
+
+        if (flag)
+        {
+            flag = false;
+            UpdateMesh(textureSprite);
+        }
+
     }
 
-    Texture2D ToTexture2D(Texture self)
+    public void DestroyMesh()
     {
-        var sw = self.width;
-        var sh = self.height;
-        var format = TextureFormat.RGBA32;
-        var result = new Texture2D(sw, sh, format, false);
-        var currentRT = RenderTexture.active;
-        var rt = new RenderTexture(sw, sh, 32);
-        Graphics.Blit(self, rt);
-        RenderTexture.active = rt;
-        var source = new Rect(0, 0, rt.width, rt.height);
-        result.ReadPixels(source, 0, 0);
-        result.Apply();
-        RenderTexture.active = currentRT;
-        return result;
+        meshFilter.mesh.Clear();
     }
 }

@@ -11,10 +11,10 @@ using System.Runtime.InteropServices;
 using UnityEngine.Networking;
 
 [RequireComponent(typeof(Button))]
-public class fileLoad : MonoBehaviour, IPointerDownHandler
+public class FileLoad : MonoBehaviour, IPointerDownHandler
 {
-    [SerializeField] private RawImage outputImage;
-    Vector2 initialSize;
+    public static Texture texture;
+    public ImageButton[] imageButton;
 
 #if UNITY_WEBGL && !UNITY_EDITOR
     //
@@ -27,30 +27,24 @@ public class fileLoad : MonoBehaviour, IPointerDownHandler
 
     // ファイルを開く
     public void OnPointerDown(PointerEventData eventData) {
-        UploadFile(gameObject.name, "OnFileUpload", ".", false);
+        UploadFile(gameObject.name, "OnFileUpload", ".png, .jpg", true);
     }
 
     // ファイルアップロード後の処理
-    public void OnFileUpload(string url) {
-        StartCoroutine(Load(url));
+    public void OnFileUpload(string urls) {
+        string[] url = urls.Split(',');
+        for (int i = 0; i < url.Length; i++)
+        {
+            StartCoroutine( Load(url[i], i) );
+        }
     }
-
-    void Start()
-    {
-        initialSize = outputImage.rectTransform.rect.size;
-    }
-
-#else
-    //
-    // OSビルド & Unity editor上
-    //
+#elif UNITY_EDITOR
     public void OnPointerDown(PointerEventData eventData) { }
 
     void Start()
     {
         var button = GetComponent<Button>();
         button.onClick.AddListener(() => OpenFile());
-        initialSize = outputImage.rectTransform.rect.size;
     }
 
     // ファイルを開く
@@ -58,35 +52,70 @@ public class fileLoad : MonoBehaviour, IPointerDownHandler
     {
         // 拡張子フィルタ
         var extensions = new[] {
-            new ExtensionFilter("png", "png" ),
             new ExtensionFilter("jpg", "jpg" ),
+            new ExtensionFilter("png", "png" ),
         };
 
         // ファイルダイアログを開く
-        var paths = StandaloneFileBrowser.OpenFilePanel("Open File", "", extensions, false);
-        if (paths.Length > 0 && paths[0].Length > 0)
+        //var paths = StandaloneFileBrowser.OpenFilePanel("画像を選択", "", extensions, false);
+        string[] paths = new string[3];
+        paths[0] = "/Users/kihara/Documents/01_大学/01_research/00_資料/3D-swing/20240630/texture_images/B_01.jpg";
+        //paths[0] = "/Users/kihara/Desktop/tmp/B_01.jpg";
+        
+        for (int i = 0; i < 7; i++)
         {
-            StartCoroutine( Load(new System.Uri(paths[0]).AbsoluteUri) );
+            if (paths.Length > 0 && paths[0].Length > 0)
+            {
+                StartCoroutine(Load(new System.Uri(paths[0]).AbsoluteUri, i));
+            }
+        }
+    }
+
+#else
+    //
+    // OSビルド
+    //
+
+    public void OnPointerDown(PointerEventData eventData) { }
+
+    void Start()
+    {
+        var button = GetComponent<Button>();
+        button.onClick.AddListener(() => OpenFile());
+    }
+
+    // ファイルを開く
+    public void OpenFile()
+    {
+        // 拡張子フィルタ
+        var extensions = new[] {
+            new ExtensionFilter("jpg", "jpg" ),
+            new ExtensionFilter("png", "png" ),
+        };
+
+        // ファイルダイアログを開く
+        var paths = StandaloneFileBrowser.OpenFilePanel("画像を選択", "Desktop", extensions, true);
+        for(int i = 0; i < paths.Length; i++)
+        {
+            if (i == 7) break;
+
+            if (paths.Length > 0 && paths[i].Length > 0)
+            {
+                StartCoroutine(Load(new System.Uri(paths[i]).AbsoluteUri, i));
+            }
         }
     }
 
 #endif
 
     // ファイル読み込み
-    private IEnumerator Load(string url)
+    private IEnumerator Load(string url, int i)
     {
         var loader = new WWW(url);
         yield return loader;
-        outputImage.texture = loader.texture;
-        outputImage.FixAspect(initialSize);
 
-        if (this.gameObject.name == "TextureButton")
-        {
-            generateMesh.textureTexture = loader.texture;
-        }
-        else if (this.gameObject.name == "DepthButton")
-        {
-            generateMesh.depthTexture = loader.texture;
-        }
+        texture = loader.texture;
+
+        imageButton[i].UpdateImage();
     }
 }
